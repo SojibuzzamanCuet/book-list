@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" 
+    integrity="sha512-EZLkOqwILORob+p0BXZc+Vm3RgJBOe1Iq/0fiI7r/wJgzOFZMlsqTa29UEl6v6U6gsV4uIpsNZoV32YZqrCRCQ==" crossorigin="anonymous" />
+    <title>Book list</title>
+    <style>
+        .success , .error{
+            color: white;
+            padding: 5px;
+            margin: 5px 0px 15px 0px;
+        }
+        .success{
+            background: green;
+        }
+        .error{
+            background: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3> Add Book </h3>
+        <form id="book-form">  
+            <div>
+                <label for="title">title</label>
+                <input type="text" id="title" class="u-full-width">
+            </div>
+            <div>
+                <label for="author">Author</label>
+                <input type="text" id="author" class="u-full-width">
+            </div>
+            <div>
+                <label for="isbn">ISBN</label>
+                <input type="text" id="isbn" class="u-full-width">
+            </div>
+            <div>
+                <input type="submit" value="submit" class="u-full-width">
+            </div>
+       </form>
+       <table class="u-full-width">
+           <thead>
+           <tr>
+               <th>title</th>
+               <th>author</th>
+               <th>ISBN</th>
+               <th></th>
+           </tr>
+           </thead>
+           <tbody id="book-list"></tbody>
+       </table>
+    </div>
+  <script>
+      let form = document.querySelector('#book-form');
+      let booklist = document.querySelector('#book-list');
+
+
+class Book{
+    constructor(title,author,isbn){
+        this.title = title;
+        this.author = author;
+        this.isbn = isbn;
+    }
+}
+
+class UI {
+    
+
+       static addToBooklist(book){
+        let list = document.querySelector('#book-list');
+        let row = document.createElement('tr');
+        row.innerHTML = `
+           <td>${book.title}</td>
+           <td>${book.author}</td>
+           <td>${book.isbn}</td>
+           <td><a href ='#' class = "delete">X</a></td>`;
+           
+        
+            list.appendChild(row);
+        
+        }
+   static clearFields(){
+            document.querySelector('#title').value = " ";
+    document.querySelector('#author').value = " ";
+     document.querySelector('#isbn').value = " ";
+        }
+     static showAlert(message, className){
+            let div = document.createElement('div');
+            div.className = `alert ${className}`;
+            div.appendChild(document.createTextNode(message));
+            let container = document.querySelector('.container');
+            let form = document.querySelector('#book-form');
+            container.insertBefore(div, form);
+            setTimeout(function(){
+                document.querySelector('.alert').remove(); 
+            } ,3000);
+        }
+    static deleteFromBook(target){
+           if(target.hasAttribute('href')){
+               target.parentElement.parentElement.remove();
+               Store.removeBook(target.parentElement.previousElementSibling.textContent.trim());
+               UI.showAlert("book removed!","success");
+           } 
+       } 
+    
+}
+
+class Store {
+    static getBooks(){
+        let books;
+        if(localStorage.getItem('books')===null){
+            books=[];
+        }
+        else{
+            books=JSON.parse(localStorage.getItem('books'));
+        }
+        return books;
+    }
+    static addBook(book){
+     let books = Store.getBooks();
+     books.push(book);
+     localStorage.setItem('books', JSON.stringify(books));
+    }
+    static displayBooks(){
+        let books = Store.getBooks();
+        books.forEach(book => {
+            UI.addToBooklist(book);
+            
+        });
+    }
+    static removeBook(isbn){
+        let books = Store.getBooks();
+        books.forEach((book, index) => {
+       if(books.isbn === isbn){
+           books.splice(index, 1);
+       }
+        })
+        localStorage.setItem('books',JSON.stringify(books));
+    }
+}
+
+
+
+
+form.addEventListener('submit', newBook);
+booklist.addEventListener('click', removeBook);
+document.addEventListener('DOMContentLoaded',Store.displayBooks());
+
+function newBook(e){
+    let title = document.querySelector('#title').value;
+    let author = document.querySelector('#author').value;
+    let isbn = document.querySelector('#isbn').value;
+
+
+    if(title===''|| author===''|| isbn===''){
+    UI.showAlert("please fill all the fields","error");
+    }
+    else{
+        let book = new Book(title, author, isbn);
+    
+    UI.addToBooklist(book);
+    UI.clearFields();
+    UI.showAlert("Book added","success");
+    Store.addBook(book);
+    }
+   
+    e.preventDefault();
+}
+function removeBook(e){
+    UI.deleteFromBook(e.target);
+    e.preventDefault();
+}
+           
+        
+  
+       
+  </script>  
+</body>
+</html>
